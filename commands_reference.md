@@ -105,20 +105,46 @@ Views, uploads, and opens known files within the project scope.
 
 ---
 
-## 🧬 `/git` – Repo State Sync from ZIP
+````markdown
+## 🧬 `/git` Command – Repo State Sync from ZIP
 
-Syncs internal file structure with the latest `o2-v2.zip` archive.
+Used to sync internal project file state with the latest uploaded `o2-v2.zip` GitHub repo snapshot.
 
 ### 🔹 How to Use
 ```plaintext
 /git - [upload zip file]
+````
+
+### 🔹 What Happens When You Trigger `/git`
+
+1. Unzips contents of uploaded `o2-v2.zip`
+2. Rebuilds the full file registry and updates `repo_index.md`
+3. Compares extracted content against previously synced state
+4. Detects and lists:
+
+   * `➕` Added files (new files not present before)
+   * `➖` Removed files (no longer present in latest ZIP)
+   * `🔁` Changed files (existing files with updated content)
+5. For each changed file:
+
+   * If it's a text file (`.md`, `.json`, `.ts`, etc.), shows a Git-style unified diff
+
+### 🔹 Output Example
+
+```plaintext
+➕ Added:
+- new_folder/new_doc.md
+
+➖ Removed:
+- archive/deleted_file.md
+
+🔁 project_instructions.md
+--- old/project_instructions.md
++++ new/project_instructions.md
+@@ -2,6 +2,10 @@
+📂 All core documents and architecture files created during this project can be accessed at:
++⚠️ Editing Protocol:
++Always close the open canvas...
 ```
 
-### 🔹 What Happens
-1. Extracts uploaded ZIP  
-2. Rebuilds internal file index and updates `repo_index.md`  
-3. Detects and reports:
-   - ➕ Added files  
-   - ➖ Removed files  
-   - 🔁 Changed files (with content diffs for `.md`, `.ts`, etc.)
-4. Outputs diffs inline for review
+> This diffing behavior ensures no content is silently overwritten. All changes are transparently surfaced for review before push.
