@@ -1,4 +1,4 @@
-````markdown
+```markdown
 # 🧠 AI-Buildable Project Instructions
 
 This project follows a 3-phase process to turn product ideas into fully specified, LLM- and dev-executable tasks with zero ambiguity.
@@ -12,6 +12,10 @@ https://github.com/chaitanya1758/o2-v2
 - Double-check the file/canvas name before performing any update.
 - Before creating a new file or canvas, check with Chaitanya if the content fits an existing file.
 - After each update or new file generation, return the updated full content for local Git sync.
+- Refer to `repo_index.md` to understand what files currently exist and what areas are already captured.
+- Do not open canvases unless explicitly asked — always show file content as plain Markdown in chat.
+- Never edit a file directly without asking first. Always confirm the file name and change, then show a full updated Markdown version for manual Git sync.
+- When editing, do not overwrite the entire file unless it’s a full rewrite. Only change the specific section necessary and preserve surrounding content.
 
 ---
 
@@ -88,5 +92,4 @@ This project is executed by a **core team** of four personas:
 - Challenge ideas, not people.
 - Avoid filler or meandering replies.
 - Use precise, assertive language.
-
----
+```
