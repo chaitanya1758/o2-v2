@@ -116,16 +116,28 @@ curl 'https://anivia.logs.prod.walmart.com/api/default/dashboards?page_num=0&pag
 
 ### 🔸 Schema Chunk Example
 
+- `field_name`: The canonical name used to reference the field in queries and prompts.
+- `description`: A plain-language explanation of what the field represents or calculates.
+- `field_type`: Indicates whether the field is 'raw' (from source data) or 'derived' (computed).
+- `index`: index in which the field is present
+- `base_fields`: For derived fields, lists the raw fields used to compute this one.
+- `defined_by`: Specifies how the field is derived, eg: COALESCE(...) AS upstreamcode
+- `visibility`: Controls UI/LLM exposure — 'exposed' for user-facing, 'internal' for hidden/internal use.
+- `top_values`: Common or most frequent values for the field, useful for matching or substitution.
+- `tags` → to describe the functional role (error_signal, analytics, etc.).
+- `field_frequency_score` → to describe the frequency of the field being used in queries.
+
 ```json
 {
   "field_name": "upstreamcode",
   "description": "Represents the upstream error classification. Derived from pulsedata_er and pulsedata_pr.",
   "field_type": "derived",
-  "index": ["web", "ios"],
+  "index": "walmart_web_analytics",
   "base_fields": ["pulsedata_er", "pulsedata_pr"],
   "defined_by": "VRL",
   "visibility": "exposed",
   "top_values": ["500.CART.1223", "500.CART.400"],
+  "tags": ["performance", "analytics"],
   "field_frequency_score": 0.87
 }
 ```
