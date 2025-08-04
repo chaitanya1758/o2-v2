@@ -1,4 +1,5 @@
-**Post-Query UI Interactions – Execution, Preview, and Summary**
+```markdown
+# Post-Query UI Interactions – Execution, Preview, and Summary
 
 ---
 
@@ -12,13 +13,13 @@ This document defines the user interface and backend behavior after a query is g
 
 After user submits a natural language query and RAG/LLM flow completes, the backend returns:
 
-- `index` (stream)
-- `openobserve_index` (deployment → base URL)
-- `sql_query` (OpenObserve-compliant SQL)
-- `vrlFunctionQuery` (optional)
-- `time_range` (e.g., `last_7d`)
-- `confidence_score` (for UI badge)
-- `used_derived_fields` (optional)
+- `index` (stream)  
+- `openobserve_index` (deployment → base URL)  
+- `sql_query` (OpenObserve-compliant SQL)  
+- `vrlFunctionQuery` (optional)  
+- `time_range` (e.g., `last_7d`)  
+- `confidence_score` (for UI badge)  
+- `used_derived_fields` (optional)  
 
 ---
 
@@ -26,29 +27,31 @@ After user submits a natural language query and RAG/LLM flow completes, the back
 
 ### 🔹 3.1. Query Preview
 
-- Displays generated SQL and VRL block
-- Syntax-highlighted, read-only
+- Displays generated SQL and VRL block  
+- Syntax-highlighted, read-only  
 - Tag badges:
-  - Confidence level (`High`, `Medium`, `Low`)
-  - Fallback mode used
-  - Derived fields (if any)
+  - Confidence level (`High`, `Medium`, `Low`)  
+  - Fallback mode used (if any)  
+  - Derived fields (if any used)  
+  - Trust badge (based on confidence + explain mode)
 
 ---
 
 ### 🔹 3.2. [Run in OpenObserve] Button
 
 - Constructs a URL to the relevant OpenObserve deployment with:
-  - Pre-filled `stream`
-  - Query string (`sql_query`)
-  - Time filters (`start`, `end` or relative like `now()-7d`)
+  - Pre-filled `stream`  
+  - Query string (`sql_query`)  
+  - Time filters (`start`, `end` or relative like `now()-7d`)  
 
-**Example URL Format:**
-
-```text
-https://anivia.logs.prod.walmart.com/web/search?stream=walmart_web_analytics&query=SELECT+...&start=now()-7d
+Example:  
 ```
 
-- Opens in a new tab
+[https://anivia.logs.prod.walmart.com/web/search?stream=walmart\_web\_analytics\&query=SELECT+...\&start=now()-7d](https://anivia.logs.prod.walmart.com/web/search?stream=walmart_web_analytics&query=SELECT+...&start=now%28%29-7d)
+
+````
+
+- Opens in a new tab  
 - Assumes user has a session cookie to access logs
 
 ---
@@ -56,28 +59,25 @@ https://anivia.logs.prod.walmart.com/web/search?stream=walmart_web_analytics&que
 ### 🔹 3.3. [Summarize Result] Button
 
 - Backend behavior:
-  1. Executes the SQL query via OpenObserve's `/api/search` endpoint (or via curl if needed)
-  2. Samples or aggregates result data
-  3. Passes query + results + original question to LLM
-  4. Returns a human-readable summary (e.g., "ATC error rate over last 7 days was 4.3% on cart page.")
+  1. Executes SQL via OpenObserve's `/api/search`  
+  2. Samples or aggregates rows (max 100)  
+  3. Passes query + results + original prompt to LLM  
+  4. Returns human-readable summary  
 
-**Notes:**
-
-- Can show loading state with: *"Fetching and summarizing query results…"*
-- For large result sets: *"Summary generated from top 50 rows"*
+UI strings:
+- Loading: _"Fetching and summarizing query results..."_  
+- Large result note: _"Summary generated from top 50 rows"_  
+- On fallback: _"LLM failed to summarize — showing raw rows instead"_
 
 ---
 
 ### 🔹 3.4. Feedback + Copy Controls
 
-#### ✅ Copy Button
+#### ✅ Copy Button  
+- One-click copy of `sql_query`
 
-- One-click copy of `sql_query` to clipboard
-
-#### 👍 Thumbs Up
-
+#### 👍 Thumbs Up / 👎 Thumbs Down  
 - Sends event payload to backend:
-
 ```json
 {
   "index": "walmart_web_analytics",
@@ -89,41 +89,41 @@ https://anivia.logs.prod.walmart.com/web/search?stream=walmart_web_analytics&que
   "corrected_vrl_logic": "...",
   "feedback_comment": "Wrong page context. Should be itemPage not cart."
 }
-```
+````
 
-- Stored for offline review or retraining
+* Used to retrain prompt flows and improve retrievers
+* If schema ambiguity caused issue → tag for `schema_hint_required`
 
 ---
 
 ## 4. UI Layout Summary
 
-| Component          | Description                                              |
-| ------------------ | -------------------------------------------------------- |
-| SQL + VRL Preview  | Side-by-side block, collapsible if long                  |
-| Run in OpenObserve | Opens search UI with pre-filled query                    |
-| Summarize Result   | Fetches + LLM-summarizes response                        |
-| Feedback Control   | Thumbs up/down + optional correction form on thumbs down |
-| Copy SQL           | One-click copy of generated SQL                          |
+| Component          | Description                                          |
+| ------------------ | ---------------------------------------------------- |
+| SQL + VRL Preview  | Side-by-side block, collapsible if long              |
+| Run in OpenObserve | Opens OpenObserve UI with pre-filled query & filters |
+| Summarize Result   | Executes + LLM-summarizes query results              |
+| Feedback Control   | Thumbs up/down + optional correction form            |
+| Copy SQL           | One-click SQL copy                                   |
 
 ---
 
 ## 5. Technical Considerations
 
-| Feature               | Detail                                                      |
-| --------------------- | ----------------------------------------------------------- |
-| OpenObserve Execution | Uses `/api/search` or equivalent internal search API        |
-| Auth                  | Passes cookie or service-token if backend executes query    |
-| Fallback Path         | Uses backend script with `curl` if API fails or throttled   |
-| Rate Limiting         | Cap query response rows for summarization (e.g., 100 rows)  |
-| Feedback Pipeline     | Logs both positive and negative interactions for retraining |
+| Feature               | Detail                                                          |
+| --------------------- | --------------------------------------------------------------- |
+| OpenObserve Execution | Uses `/api/search` or fallback curl                             |
+| Auth                  | Uses session token or cookie context                            |
+| Row Capping           | Caps sample rows (e.g. 100) before LLM summarization            |
+| Feedback Logging      | Positive/negative stored with full prompt + output              |
+| VRL Handling          | VRL summary optional; if failed, fallback to SQL-only rendering |
 
 ---
 
 ## 6. Edge Cases
 
-- ⚠️ No session: Disable "Run in OpenObserve" or prompt login
-- ⚠️ API failure: Show error toast; log for debugging
-- ⚠️ Ambiguous stream: Block execution until `index` is resolved
-
----
+* ⚠️ No session: disable "Run in OpenObserve" or prompt login
+* ⚠️ API failure: toast error and backend log
+* ⚠️ Ambiguous index: block summary until index resolved
+* ⚠️ LLM fallback mode: raw results shown with banner explanation
 
