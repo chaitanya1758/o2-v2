@@ -41,12 +41,22 @@ rag_score = cosine_similarity + (index_match ? 0.1 : 0) - token_overlap_penalty;
 
 ### Prompt Construction
 
-8. Prompt is assembled with distinct sections:
+### Top Query Injection
 
-   * **User Intent**
-   * **Schema Metadata** (from `schemaIndex`)
-   * **Example Queries** (from RAG)
-   * **System Instructions** (e.g., rewrite query using `page_nm = 'search'`)
+* For the selected `index`, the system checks for an available top-queries file.
+* This file contains up to 10 manually curated or auto-summarized unique queries frequently run against that stream.
+* These queries are injected into the prompt as grounding context, regardless of user query match.
+* They are meant to inform the LLM about the kind of questions typically asked on this stream.
+
+Injected format:
+
+> Other common queries on this stream:
+>
+> * What is the error rate on cart page?
+> * How many ATC failures happened yesterday?
+> * Show 5xx trends for the PDP page
+
+* These examples are **not retrieved dynamically** or reranked — they are always passed through as-is.
 
 ### LLM Response
 
@@ -95,7 +105,7 @@ Each uses:
 * Queries `example_query_rag`
 * Resolves field metadata from `schemaIndex`
 * Applies composite scoring
-* Builds final prompt with top 3 examples + schema metadata
+* Builds final prompt with top 3 examples + schema metadata + top queries
 
 ### 🔹 Prompt Generator
 
@@ -104,12 +114,6 @@ Each uses:
 * Injects safety instructions ("do not copy if page mismatch")
 * Tracks `prompt_id`, `included_chunks`, and `token_budget`
 * **Always generates both SQL and VRL**
-
-### 🔹 Validator
-
-* Checks for field substitution accuracy
-* Validates presence of requested `page_nm`, `metric`
-* Flags hallucinations or mismatches for feedback ingestion
 
 ### 🔹 UI Layer (Yogi)
 
@@ -121,8 +125,8 @@ Each uses:
 
 ## 4. Edge-Case Handling
 
-* **No match from schemaIndex** → use fallback template + expose schema hints
-* **Too many matches from example RAG** → rank by overlap + cap tokens
+* **No match from RAG** → use fallback template + expose top query hints
+* **Too many matches from RAG** → rank by overlap + cap tokens
 * **Substitution mismatch** → tag as `low-confidence` and prompt user
 * **Unrecognized fields** → fallback UI suggestion + log for analyst triage
 
@@ -187,16 +191,16 @@ Each uses:
 
 Schema fields are loaded from structured schema files (e.g., OpenObserve API schema, analytics logs, OpenAPI spec). Each field includes:
 
-* `field_name`: The canonical name used to reference the field in queries and prompts.
-* `description`: A plain-language explanation of what the field represents or calculates.
-* `field_type`: Indicates whether the field is 'raw' (from source data) or 'derived' (computed).
-* `index`: Index in which the field is present
-* `base_fields`: For derived fields, lists the raw fields used to compute this one.
-* `defined_by`: Specifies how the field is derived, e.g., COALESCE(...) AS upstreamcode
-* `visibility`: Controls UI/LLM exposure — 'exposed' for user-facing, 'internal' for hidden/internal use.
-* `top_values`: Common or most frequent values for the field, useful for matching or substitution.
-* `tags`: Functional tags (e.g., error\_signal, analytics, performance)
-* `field_frequency_score`: Frequency score based on usage across queries
+* `field_name`
+* `description`
+* `field_type`
+* `index`
+* `base_fields`
+* `defined_by`
+* `visibility`
+* `top_values`
+* `tags`
+* `field_frequency_score`
 
 ### 🔹 Access Format
 
@@ -216,9 +220,6 @@ schemaIndex["upstreamcode"] = {
   field_frequency_score: 0.87
 }
 ```
-
-* This replaces all vector-based schema chunking
-* Enables deterministic, zero-token-cost schema resolution at runtime
 
 ---
 
