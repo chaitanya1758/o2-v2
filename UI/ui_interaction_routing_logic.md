@@ -1,3 +1,4 @@
+````markdown
 **Index & Environment Selection – UX + Routing Rules**
 
 ---
@@ -95,22 +96,25 @@ After stream selection:
 
 - `index` is primary lookup key
 - `openobserve_index` is derived or explicitly provided
-- RAG retrieval filters both schema chunks and sample queries by:
+- schema is retrived from local files based on the index.
+- RAG retrieval filters only example queries by:
 
 ```json
 {
   "index": "walmart_app_analytics",
   "deployment": "anivia"
 }
-```
+````
 
 ---
 
 ## 7. Future Extensions
 
-- Add ranking hints to most frequently used indexes per user/org
-- Allow tagging or starring favorite indexes
-- Show recent RAG hits per index
+* Add ranking hints to most frequently used indexes per user/org
+* Allow tagging or starring favorite indexes
+* Show recent RAG hits per index
 
 ---
 
+```
+```
