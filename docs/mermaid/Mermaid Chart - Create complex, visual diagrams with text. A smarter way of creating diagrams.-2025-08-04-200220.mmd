@@ -1,0 +1,170 @@
+graph TD
+
+  %% 🟦 UI Layer
+  subgraph UI_Layer
+    UI_Client[UI_Client]
+
+    subgraph ChatBot
+      Chat_Interface[Chat_Interface]
+
+      subgraph LLM_Response
+        Generated_SQL[Generated_SQL_and_VRL]
+        Run_in_OpenObserve_Button[Run_in_OpenObserve_Button]
+        Summarize_Button[Summarize_Button]
+      end
+
+      LLM_Summary_Response[LLM_Summary_Response]
+    end
+
+    Run_Query[Run_Query]
+    Edit_Query[Edit_Query]
+    Edit_Query_Form[Edit_Query_Form]
+    Saved_Queries_Grid[Saved_Queries_Grid]
+    ADD_query[Add_Query_Button]
+    ADD_query_form[Add_Query_Form]
+
+    subgraph Chat_History
+      History[Previous_Chat_History]
+    end
+
+    subgraph Frequently_Asked_Queries
+      FAQ_Node[frequently_asked_queries]
+    end
+  end
+
+  %% 🟦 Response Formatter
+  subgraph Response_Formatter
+    Format_SQL_and_VRL_Output[Format_SQL_and_VRL_Output]
+    Generate_OpenObserve_URL[Generate_OpenObserve_URL]
+    Build_OpenObserve_Search_Query[Build_OpenObserve_Search_Query]
+    Parse_Date_Range_From_Input[Parse_Date_Range_From_Input]
+  end
+
+  %% 🟧 Prompt Engine
+  subgraph Prompt_Engine
+    Query_Prompt_Orchestrator[Query_Prompt_Orchestrator]
+    Query_Prompt_Template[Query_Prompt_Template]
+    schemaIndex_Store[schemaIndex_Store]
+    unique_query_loader[unique_query_loader]
+    Query_Cosine_Similarity_Scorer[Query_Cosine_Similarity_Scorer]
+  end
+
+  %% 🟥 RAG System
+  subgraph RAG_System
+    RAG_Query_Retriever[RAG_Query_Retriever]
+    sample_query_rag_Index[sample_query_rag_Index]
+  end
+
+  %% 🟪 LLM Layer
+  subgraph LLM_Engine
+    LLM[LLM_Engine]
+  end
+
+  %% 🟨 Execution Engine
+  subgraph Execution_Engine
+    Search_Query_Executor[Search_Query_Executor]
+    OpenObserve_Search_API_Invoker[OpenObserve_Search_API_Invoker]
+    LLM_Summarization_Prompt[LLM_Summarization_Prompt]
+  end
+
+  %% 🟩 Ingestion Flow
+  subgraph Ingestion_Pipeline
+    Ingest[Ingestion_Pipeline]
+    LLM_Enhancer[LLM_Enhancer]
+    Git_PR_Generator[Git_PR_Generator]
+  end
+
+  %% 🟫 Governance
+  subgraph Governance
+    Maintainer_Review[Maintainer_Review]
+  end
+
+  %% 🟫 Datastores
+  subgraph Datastores
+    schema_database[schema_database]
+    unique_query_database[unique_query_database]
+    PosFB[positive_feedback_events]
+    NegFB[negative_feedback_events]
+    Saved_Queries_Database[Saved_Queries_Database]
+    Chat_Session_Storage[Chat_Session_Storage]
+  end
+
+  %% 📊 Top Queries Recommender
+  subgraph Top_Queries_Recommender
+    Extract_Recent_Query_Sessions[Extract_Recent_Query_Sessions]
+    Select_TopK_Frequent_Queries[Select_TopK_Frequent_Queries]
+  end
+
+  %% 🟦 Source System
+  OpenObserve_Platform[OpenObserve_Platform]
+  OpenObserve_UI[OpenObserve_UI]
+
+  %% FLOW LINES
+  Chat_Interface -->|2| Query_Prompt_Orchestrator
+  Chat_Interface -->|3| Parse_Date_Range_From_Input
+
+  Query_Prompt_Orchestrator -->|4| schemaIndex_Store
+  Query_Prompt_Orchestrator -->|5| unique_query_loader
+  Query_Prompt_Orchestrator -->|6| RAG_Query_Retriever
+  schemaIndex_Store -->|7| Query_Prompt_Orchestrator
+  unique_query_loader -->|8| Query_Prompt_Orchestrator
+  RAG_Query_Retriever -->|9| Query_Cosine_Similarity_Scorer
+  Query_Cosine_Similarity_Scorer -->|10| Query_Prompt_Orchestrator
+  Query_Prompt_Orchestrator -->|11| Query_Prompt_Template
+  Query_Prompt_Template -->|12| LLM
+  LLM -->|13| Response_Formatter
+
+  Format_SQL_and_VRL_Output -->|14| Generated_SQL
+  Generate_OpenObserve_URL -->|15| Run_in_OpenObserve_Button
+  Build_OpenObserve_Search_Query -->|16| Summarize_Button
+
+  Summarize_Button -->|17| Search_Query_Executor
+  Search_Query_Executor -->|18| OpenObserve_Search_API_Invoker
+  OpenObserve_Search_API_Invoker -->|19| LLM_Summarization_Prompt
+  LLM_Summarization_Prompt -->|20| LLM
+  LLM -->|21| LLM_Summary_Response
+
+  LLM_Summary_Response -->|22| PosFB
+  LLM_Summary_Response -->|23| NegFB
+
+  Chat_Session_Storage -->|24| History
+  FAQ_Node -->|26| Top_Queries_Recommender
+
+  Saved_Queries_Grid -->|29| Edit_Query
+  Saved_Queries_Grid -->|30| Run_Query
+  Saved_Queries_Grid -->|57| ADD_query
+  ADD_query -->|58| ADD_query_form
+  ADD_query_form -->|59| Saved_Queries_Database
+
+  Edit_Query -->|31| Edit_Query_Form
+  Edit_Query_Form -->|32| Saved_Queries_Database
+
+  Run_Query -->|33| Parse_Date_Range_From_Input
+  Run_Query -->|34| Format_SQL_and_VRL_Output
+  Parse_Date_Range_From_Input -->|35| Build_OpenObserve_Search_Query
+  Parse_Date_Range_From_Input -->|36| Generate_OpenObserve_URL
+  ChatBot -->|37| Chat_Session_Storage
+
+  OpenObserve_Platform -->|38| Ingest
+  Ingest -->|39| LLM_Enhancer
+  LLM_Enhancer -->|40| Git_PR_Generator
+  Git_PR_Generator -->|41| Maintainer_Review
+  Maintainer_Review -->|42| schema_database
+  Maintainer_Review -->|43| sample_query_rag_Index
+
+  Run_in_OpenObserve_Button -->|44| OpenObserve_UI
+
+  Saved_Queries_Database -->|45| Saved_Queries_Grid
+  UI_Client -->|46| FAQ_Node
+  UI_Client -->|47| Saved_Queries_Grid
+  UI_Client -->|48| History
+  UI_Client -->|49| ChatBot
+
+  Extract_Recent_Query_Sessions -->|50| Chat_Session_Storage
+  Chat_Session_Storage -->|51| Extract_Recent_Query_Sessions
+  Select_TopK_Frequent_Queries -->|52| FAQ_Node
+  Extract_Recent_Query_Sessions -->|53| Select_TopK_Frequent_Queries
+
+  Maintainer_Review -->|54| unique_query_database
+  unique_query_database -->|55| unique_query_loader
+  schema_database -->|56| schemaIndex_Store

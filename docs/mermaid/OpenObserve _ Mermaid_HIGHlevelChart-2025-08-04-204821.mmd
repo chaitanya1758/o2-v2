@@ -1,0 +1,120 @@
+flowchart TB
+    subgraph UI_Layer["🎨 Presentation Layer"]
+        ChatUI["Chat Interface<br>• NL Query Input<br>• Environment/Stream Selection"]
+        QueryPreview["Query Preview<br>• SQL/VRL Display<br>• Confidence Badges"]
+        SavedQueries["Saved Queries<br>• Management Grid<br>• Edit/Run/Add"]
+        Feedback["Feedback System<br>• Thumbs Up/Down<br>• Corrections"]
+        FAQDisplay["FAQ Display<br>• Frequently Asked Queries<br>• Common Patterns"]
+    end
+
+    subgraph RAG_System["Context Assembly"]
+        VectorSearch["Vector Search<br>• Dashboard Panel Retrieval<br>• Composite Scoring"]
+        SchemaLookup["Schema Resolution<br>• Environment-Namespaced<br>• Field Validation"]
+        TopQueries["Top Query Examples<br>• Stream-Specific<br>• Few-shot Context"]
+    end
+
+    subgraph Intelligence_Layer["🧠 Intelligence Layer"]
+        PromptOrchestrator["Query Prompt Orchestrator<br>• Context Assembly<br>• Multi-source Integration"]
+        RAG_System
+        LLMEngine["LLM Engine<br>• SQL/VRL Generation<br>• Result Summarization"]
+        QueryRecommender["Top Queries Recommender<br>• Usage Analysis<br>• FAQ Generation"]
+    end
+
+    subgraph Knowledge_Base["Knowledge Base"]
+        RAGIndex[("Milvus Vector DB<br>Dashboard Panel Examples<br>Enhanced Metadata")]
+    end
+
+    subgraph Operational_Data["Operational Storage"]
+        SchemaDB[("Schema Database<br>Environment-Namespaced<br>Field Metadata")]
+        UniqueQueries[("Query Examples DB<br>Validated Patterns<br>Top Queries")]
+        SavedQueriesDB[("Saved Queries<br>User Collections")]
+        SessionStorage[("Session Data<br>Chat History")]
+        FeedbackDB[("Feedback Events<br>Learning Data")]
+    end
+
+    subgraph Data_Layer["💾 Data Layer"]
+        Knowledge_Base
+        Operational_Data
+    end
+
+    subgraph OpenObserve_Envs["OpenObserve Environments"]
+        AniviaEnv["Anivia Environment<br>anivia.logs.prod.walmart.com"]
+        PrepurchaseEnv["Prepurchase Environment<br>prepurchase-fe.logs.prod.walmart.com"]
+    end
+
+    subgraph External_Layer["🌐 External Systems"]
+        OpenObserve_Envs
+        IngestionPipeline["Data Ingestion Pipeline<br>• Schema Extraction<br>• LLM Enhancement<br>• Review Process"]
+        DataGovernance["Data Governance<br>• GitHub PR Generation<br>• Human Review & Approval"]
+    end
+
+    %% Primary Query Generation Flow
+    ChatUI -- "User Query + Context" --> PromptOrchestrator
+    PromptOrchestrator <--> SchemaLookup
+    PromptOrchestrator <--> VectorSearch
+    PromptOrchestrator <--> TopQueries
+    
+    SchemaLookup --> SchemaDB
+    VectorSearch --> RAGIndex
+    TopQueries --> UniqueQueries
+    
+    PromptOrchestrator -- "Enriched Prompt" --> LLMEngine
+    LLMEngine -- "SQL/VRL Output" --> QueryPreview
+    
+    %% Execution Flows
+    QueryPreview -- "Run in OpenObserve" --> AniviaEnv
+    QueryPreview -- "Run in OpenObserve" --> PrepurchaseEnv
+    QueryPreview -- "Summarize Results" --> LLMEngine
+    LLMEngine -- "Summary" --> Feedback
+    
+    %% Data Management Flows
+    SavedQueries <--> SavedQueriesDB
+    ChatUI --> SessionStorage
+    Feedback --> FeedbackDB
+    
+    %% Analytics & Learning Loop
+    SessionStorage --> QueryRecommender
+    QueryRecommender --> UniqueQueries
+    QueryRecommender --> FAQDisplay
+    FeedbackDB --> RAGIndex
+    
+    %% Knowledge Base Building (Corrected Flow)
+    OpenObserve_Envs --> IngestionPipeline
+    IngestionPipeline --> DataGovernance  
+    DataGovernance --> RAGIndex
+
+    %% Apply Styling
+    ChatUI:::uiClass
+    QueryPreview:::uiClass
+    SavedQueries:::uiClass
+    Feedback:::uiClass
+    FAQDisplay:::uiClass
+    
+    VectorSearch:::intelligenceClass
+    SchemaLookup:::intelligenceClass
+    TopQueries:::intelligenceClass
+    PromptOrchestrator:::intelligenceClass
+    PromptOrchestrator:::criticalClass
+    LLMEngine:::intelligenceClass
+    LLMEngine:::criticalClass
+    QueryRecommender:::intelligenceClass
+    
+    RAGIndex:::dataClass
+    RAGIndex:::criticalClass
+    SchemaDB:::dataClass
+    SchemaDB:::criticalClass
+    UniqueQueries:::dataClass
+    SavedQueriesDB:::dataClass
+    SessionStorage:::dataClass
+    FeedbackDB:::dataClass
+    
+    AniviaEnv:::externalClass
+    PrepurchaseEnv:::externalClass
+    IngestionPipeline:::externalClass
+    DataGovernance:::externalClass
+
+    classDef uiClass fill:#6366f1,stroke:#4338ca,stroke-width:2px,color:#fff
+    classDef intelligenceClass fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff  
+    classDef dataClass fill:#f56565,stroke:#dc2626,stroke-width:2px,color:#fff
+    classDef externalClass fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+    classDef criticalClass fill:#8b5cf6,stroke:#7c3aed,stroke-width:3px,color:#fff

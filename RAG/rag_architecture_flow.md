@@ -1,5 +1,5 @@
 ````markdown
-## RAG Architecture: End-to-End System Flow (Reviewed by Rishi, Sandeep, Yogi)
+## RAG Architecture: End-to-End System Flow
 
 ---
 
@@ -222,11 +222,3 @@ schemaIndex["upstreamcode"] = {
 ```
 
 ---
-
-**Authors:**
-Rishi Mehta — infrastructure & traceability
-Sandeep Reddy — resilience & failure modes
-Yogesh Bala — prompt logic & user interaction clarity
-
-```
-```
