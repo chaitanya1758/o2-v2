@@ -1,0 +1,11 @@
+# Ignore everything
+*
+
+# But don't ignore these directories and their contents
+!open-observe/
+!open-observe/**
+!docs/
+!docs/**
+
+# Don't ignore .gitignore itself
+!.gitignore
